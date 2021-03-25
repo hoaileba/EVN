@@ -1,68 +1,50 @@
-import numpy as np
-import tensorflow as tf
-import pandas as pd
+
 import os
 import time
 import json
-from flask import Flask
-from . import NLP
-
-# import os
-
-from flask import Flask
-
+from flask import Flask,render_template
+from .Pages.page import appbp
+# from flask import Blueprint
+# from flask_socketio import SocketIO, emit  ,send 
 # from . import db
-from flask import Blueprint
-from . import db
-
-main_blue = Blueprint('main', __name__)
-
-
+from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO 
 socketio = SocketIO()
+
+
+
+# main_blue = Blueprint('main', __name__)
 
 def create_app(test_config=None):
     # create and configure the app
     instance_path = "MyProj/models"
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    
+
+
     app = Flask(__name__, instance_relative_config=True)
-    app.register_blueprint(main_blue)
-    app.config.from_pyfile('settings.py')
-    # print(app.con fig)
-    # app.config.from_mapping(
-    #     SECRET_KEY='dev',
-    #     DATABASE=os.path.join(instance_path, 'database'),
-    # )
-
-    # if test_config is None:
-    #     # load the instance config, if it exists, when not testing
-    #     app.config.from_pyfile('config.py', silent=True)
-    # else:
-    #     # load the test config if passed in
-    #     app.config.from_mapping(test_config)
-
-    # ensure the instance folder exists
+    # app.register_blueprint(main_blue)
+    app.config.from_mapping(
+        SECRET_KEY='dev',
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'app.db')
+    )
+    # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+    # db = SQLAlchemy(app)
     try:
         os.makedirs(app.instance_path)
     except OSError:
         pass
-    db.init_app(app)
-    # rocketio.init_app(app)
-    # a simple page t
-    # hat says hello
-    print(app.config)
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
-
+    app.register_blueprint(appbp)
+    # db.init_app(app)
+    # @app.route('/hello')
+    # def hello():
+    #     return render_template('chat1.html')
+    # from .api import main as main_blueprint
+    # app.register_blueprint(main_blueprint)
+    socketio.init_app(app)
     return app
-# app = create_app()
-# socketio = SocketIO(app)
-from . import api
-# from . import run
-# app = create_app()
-# if __name__ == '__main__':
-#     socketio.run(app,debug=True)
 
-#     # 
-#     app.run(debug=True)
 
+app = create_app()
+
+# from . import api

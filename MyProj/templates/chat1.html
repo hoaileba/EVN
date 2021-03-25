@@ -232,48 +232,50 @@ input.textarea {
 }
 
     </style>
-    <title>Flask-SocketIO-Chat </title>
+    <title>ChatBot LOL </title>
         <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
-	<!--<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>-->
-	<script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+	<!--<script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>-->
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script type="text/javascript" charset="utf-8">
             var socket;
-            var id = 0;
+            var id = '';
+            var current_bot_action = ""
+            
             $(document).ready(function(){
-                socket = io.connect('http://103.141.140.189:6982/chat');
+                socket = io.connect("http://127.0.0.1:5000/chat");
                 socket.on('connect', function() {
                     socket.emit('initDialogue', {});
                 });
                 socket.on('status', function(data) {
-                    id = data.conversation_id
+                    id = data.sender_id
                     console.log(id)
-                    $('ol').append("<li class='other'><div class='avatar'><img src='https://i.imgur.com/DY6gND0.png' draggable='false'/></div><div class='msg'><p>welcome</p></div></li>");
+                    $('ol').append("<li class='other'><div class='avatar'><img src='https://i.imgur.com/DY6gND0.png' draggable='false'/></div><div class='msg'><p>" + data.text + "</p></div></li>");
                     $(document).scrollTop($(document).height());
                 });
-                    
-                
                 socket.on('message_bot', function(data) {
-                    
-                    $('ol').append("<li class='other'><div class='avatar'><img src='https://i.imgur.com/DY6gND0.png' draggable='false'/></div><div class='msg'><p>" + data.msg + "</p></div></li>");
+                    current_bot_action = data.bot_action
+                    $('ol').append("<li class='other'><div class='avatar'><img src='https://i.imgur.com/DY6gND0.png' draggable='false'/></div><div class='msg'><p>" + data.message + "</p></div></li>");
                     $(document).scrollTop($(document).height());
                 });
-                socket.on('message', function(data) {
-                    
-                    $('ol').append("<li class='self'><div class='avatar'><img src='https://i.imgur.com/HYcn9xO.png' draggable='false'/></div><div class='msg'><p>" + data.msg + "</p></div></li>");
-                    $(document).scrollTop($(document).height());
-                });
-                
+             
                 $('#text').keypress(function(e) {
                     var code = e.keyCode || e.which;
                     if (code == 13) {
                         text = $('#text').val();
                         $('#text').val('');
-                      
+                        if (text != '')
+                        {
+                            $('ol').append("<li class='self'><div class='avatar'><img src='https://i.imgur.com/HYcn9xO.png' draggable='false'/></div><div class='msg'><p>" + text + "</p></div></li>");
+                            $(document).scrollTop($(document).height());
+                            if (current_bot_action != "action_please_wait")
+                            {
+                                    socket.emit('Bot',{message: text, 'sender': id});
+                            }
+                            
+                        }
                         
-                        socket.emit('text',{msg: text,'conversation_id' : id});
-                        socket.emit('Bot',{msg:text, 'conversation_id': id});
                        
                     }
                     
