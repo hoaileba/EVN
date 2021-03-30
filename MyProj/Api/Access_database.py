@@ -18,15 +18,20 @@ class Database:
                         pass
                 if ID != None:
                         pass
-                
+
+        def check_pay(self,):
+                time.sleep(3)
+                rd = randint(0,3)
+                return rd
+          
         def check_user(self, name):
                 x = randint(0,50)
                 x = x%2 
                 time.sleep(2)
                 return x
         
-        def write_Convers(self, data):
-                me = Conversation(sender = data['sender'])
+        def write_Convers(self, data,graph):
+                me = Conversation(sender = data['sender'], graph = graph)
                 db.session.add(me)
                 db.session.commit()
 
@@ -36,6 +41,14 @@ class Database:
                 db.session.add(me)
                 db.session.commit()
 
+        def update_graph(self, graph, sender ):
+                user = Conversation.query.filter_by(sender = sender).first()
+                user.graph = graph
+                db.session.commit()
+
+        def get_graph(self, sender):
+                user = Conversation.query.filter_by(sender = sender).first()
+                return user.graph 
 
         def get_last_request(self, sender):
                 # pass

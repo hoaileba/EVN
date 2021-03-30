@@ -9,9 +9,9 @@ from flask import Blueprint
 from MyProj.Api import apiBp
 from random import randint
 
-from .Process import process
+from .Process import Process
 from .Access_database import Database
-
+process = Process()
 
 # database = Database()
 api = Api(apiBp)
@@ -32,6 +32,7 @@ class Conservation(Resource):
         print('req: ',req)
         text = req['message']
         respone = process.create_respone(req)
+        print('checked : ', process.graph.checked_action)
         return jsonify({
             'action': respone['action'],
             'intent' : respone['intent'],

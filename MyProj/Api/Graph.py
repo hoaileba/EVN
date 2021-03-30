@@ -3,18 +3,25 @@ import json
 path_graph = '/MyProj/DataGraph/graph.json'
 
 class Graph:
-    def __init__(self,path_action):
+    def __init__(self,path_action = '/home/hoaileba/PythonFlask/NLP/MyProj/DataGraph/graph.txt'):
         self.connection = {}
         self.action_text = {}
         self.checked_action = {}
-        with open(path_action) as f:
-            all_action = json.load(f)
-        for action in all_action:
+        f = open(path_action)
+        for action in f:
+            action = action.split("\n")[0]
             self.checked_action[action] = 0
+        f.close()
+
+    def load_check_action(self,gr):
+        self.checked_action = gr
 
     def check_visited(self,action):
-        return checked_action[action]
+        return self.checked_action[action]
     
+    def set_visited(self, action):
+        self.checked_action[action] +=1
+
     def reset_checked(self):
         for action in self.checked_action:
             self.checked_action[action] = 0
@@ -24,13 +31,20 @@ class Graph:
             return False
         return True
 
+    def get_checked_action(self):
+        return self.checked_action
+
     def get_next_action(self,start_action,intent):
-        if ((start_action,intent) in self.connection) == False :
-                return 'action_sorry'
+        # if start_action == 
         return self.connection[(start_action,intent)]
 
 
     def get_text_action(self,action):
+        if action == 'action_ask_search_method' and self.check_visited(action):
+            if self.check_visited('repeat_branch') :
+                return self.action_text[action]
+            return self.action_text['action_ask_method']
+
         return self.action_text[action]
 
     def add_branch(self, start_action,target_action,intent):

@@ -51,7 +51,7 @@ class Model_Cls:
             tmp = tmp.strip()
             Raw_X.append(tmp)
             return Raw_X
-    def encoding(self,sent,max_length = 30):
+    def encoding(self,sent,max_length = 20):
         
         all_sent = []
         all_mask_sent = []
@@ -73,7 +73,8 @@ class Model_Cls:
 
 
 
-    def create_model(self,path_bert = 'vinai/phobert-base', num_class = 6, MAX_LEN = 30):
+
+    def create_model(self,path_bert = 'vinai/phobert-base', num_class = 8, MAX_LEN = 20):
 
         phobert = TFAutoModel.from_pretrained(path_bert)
         ids = tf.keras.layers.Input(shape=(MAX_LEN), dtype=tf.int32)
@@ -103,18 +104,23 @@ class Model_Cls:
     
     
     def get_predict(self,sent):
-        trans = {0: 'intent_all_field', 1: 'intent_cant_hear', 2: 'intent_dont_clear', 3: 'intent_only_home', 4: 'intent_provide_address', 5: 'intent_provide_name', 6: 'fallback'}
+        trans ={0: 'cant_hear', 1:'intent_affirm',2: 'intent_deny_confirm', 3:'intent_number_phone',4:'provide_address',5: 'provide_code_customer', 6: 'provide_name', 7: 'this_phone', 8 :'fallback'}
         Raw = self.pre_processing(sent)
         X_test , X_test_mask = self.encoding(Raw)
 
 
-        pred = self.model.predict((X_test,X_test_mask))
-        pred = np.argmax(pred, axis = 1)
+        raw_pred = self.model.predict((X_test,X_test_mask))
+        pred = np.argmax(raw_pred, axis = 1)
+        score = raw_pred[0][pred]
+
         pred = trans[pred[0]]
-        return pred
+        # print(raw_pred.shape)
+        
+        return pred,score
 
     def predict_test(self,sent):
             return 'provide_name'
+    
     
 
     def save_weight(self,path_save, num_last_lays = 6):

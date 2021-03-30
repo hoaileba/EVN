@@ -10,6 +10,7 @@ class Conversation(db.Model):
     __tablename__ = 'conversation'
     id_convers = db.Column(db.Integer, autoincrement = True)
     sender = db.Column(db.String(30),primary_key = True)
+    graph = db.Column(db.String(20000), nullable = False)
     mess  = db.relationship('Message', backref='message', lazy=True)
 
 

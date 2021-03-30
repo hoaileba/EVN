@@ -24,8 +24,15 @@ def Bot(message):
 
     x = response.json()
     x['sender'] = req['sender']
+
+    action = x['action']
     
     emit('message_bot', {'message':x['text'], 'bot_action': x['action']})
+    if action == 'action_please_wait':
+            response = requests.post("http://localhost:5005/apis/conversation", data = json.dumps(message),headers  =headers)
+            x = response.json()
+            x['sender'] = req['sender']
+            emit('message_bot', {'message':x['text'], 'bot_action': x['action']})
 
     #  if action is please wait for checking ->> request.post 1 more time then emit again
     
