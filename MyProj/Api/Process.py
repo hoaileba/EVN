@@ -147,23 +147,23 @@ class Process_Case:
 
         def check_possible_method(self, intent, previous_action,previous_intent):
                 if self.graph.checked_action['repeat_branch'] !=0 and (previous_action =='action_ask_search_method'\
-                                or previous_action == 'action_ask_method'):
+                                or previous_action == 'action_ask_method' or previous_action == 'action_seach_again'):
                         current_action = self.graph.get_next_action(previous_action,intent)
                         # if intent == ''
                         if intent == 'intent_number_phone' and (previous_action =='action_ask_search_method'\
-                                or previous_action == 'action_ask_method') \
+                                or previous_action == 'action_ask_method'or previous_action == 'action_seach_again') \
                                 and self.graph.check_visited(current_action) >=1:
                                 intent =  'fallback'
                                 return self.check_fallback_2nd(intent,previous_intent)
 
                         if intent == 'provide_code_customer' and (previous_action =='action_ask_search_method'\
-                                or previous_action == 'action_ask_method') \
+                                or previous_action == 'action_ask_method'or previous_action == 'action_seach_again') \
                                 and self.graph.check_visited(current_action) >=1:
                                 intent =  'fallback'
                                 return self.check_fallback_2nd(intent,previous_intent)
 
                         if intent == 'provide_address' and (previous_action =='action_ask_search_method'\
-                                or previous_action == 'action_ask_method') \
+                                or previous_action == 'action_ask_method'or previous_action == 'action_seach_again') \
                                 and self.graph.check_visited(current_action) >=1:
                                 intent = 'fallback'
                                 return self.check_fallback_2nd(intent,previous_intent)
@@ -320,7 +320,8 @@ class Process:
                 intent, score  = self.get_pred_intent(text)
                 entities = [{}]
 
-
+                code = self.model_ner.predict_code_cus(text)
+                phone = self.model_ner.predict_phone(text)
 
                 gr = self.db.get_graph(sender=  sender)
                 gr = eval(gr)
@@ -328,8 +329,8 @@ class Process:
                 self.graph.load_check_action(gr)
                 print('raw_predict_intent: ', intent,' - score: ',score)
                 # print('raw_predict_entities: ', entities)
-                random_en_name = [[{'start':0,'end':10,'value': 'lê bá hoài','type':'name'}],[{}]]
-                random_en_add = [[{'start':0,'end':9,'value': 'thanh hóa','type':'province'}],[{}]]
+                # random_en_name = [[{'start':0,'end':10,'value': 'lê bá hoài','type':'name'}],[{}]]
+                # random_en_add = [[{'start':0,'end':9,'value': 'thanh hóa','type':'province'}],[{}]]
                 # if intent == 'intent_provide_name' or intent == "provide_name":
                 #         x = randint(0,1)
                 #         # i = x%2
@@ -364,12 +365,18 @@ class Process:
                         self.db.update_graph(sender = sender, graph = gr)
                         return data
                         
+                
+                
 
                 intent = self.process_case.process_by_score(intent,score)
+                if code != [{}]:
+                        intent = 'provide_code_customer'
+                elif phone != [{}]:
+                        intent = 'intent_number_phone'
                 print("process_by_score: ", intent)
                 if intent == 'intent_number_phone' : 
                         entities = self.model_ner.predict_phone(text)
-                if previous_action == 'action_ask_ID' or previous_action == 'action_ask_ID_again':
+                if previous_action == 'action_ask_ID' or previous_action == 'action_ask_ID_again' or previous_action == 'action_confirm_ID' or previous_action == 'action_confirm_ID_again':
                         e = self.model_ner.predict_code_cus(text)
                         print(e)
                         if e != [{}]:

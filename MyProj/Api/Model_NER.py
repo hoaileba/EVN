@@ -194,22 +194,22 @@ class Model_NER:
                                         name = tmp
                                         st = index[0]
                                         ed = index[-1]
-                                        entities.append({'start':st,'end':ed,'value':name,'type':'NAME'})
+                                        entities.append({'start':st,'end':ed,'value':name,'type':'NAME','method':'model'})
                                 if trans_off[data[index[0]]] == 'B-STR':
                                         street = tmp
                                         st = index[0]
                                         ed = index[-1]
-                                        entities.append({'start':st,'end':ed,'value':street,'type':'STREET'})
+                                        entities.append({'start':st,'end':ed,'value':street,'type':'STREET','method':'model'})
                                 if trans_off[data[index[0]]] == 'B-DIS':
                                         dis = tmp
                                         st = index[0]
                                         ed = index[-1]
-                                        entities.append({'start':st,'end':ed,'value':dis,'type':'DIS'})
+                                        entities.append({'start':st,'end':ed,'value':dis,'type':'DIS','method':'model'})
                                 if trans_off[data[index[0]]] == 'B-PRV':
                                         province = tmp
                                         st = index[0]
                                         ed = index[-1]
-                                        entities.append({'start':st,'end':ed,'value':province,'type':'PRV'})
+                                        entities.append({'start':st,'end':ed,'value':province,'type':'PRV','method':'model'})
                                 tmp = ''
                                 index = []
                 
@@ -233,7 +233,7 @@ class Model_NER:
                                         Max = max(e['end'],Max)
                                         add+=e['value'] + ' '
                         if add !='':
-                                entities.append({'start':Min,'end':Max,'value':add, 'type':'address'})
+                                entities.append({'start':Min,'end':Max,'value':add, 'type':'address','method':'model'})
                         else :
                                 entities.append({})
 
@@ -267,18 +267,18 @@ class Model_NER:
                     st = x.start()
                     ed = x.end()
                     value = x.group()
-                    entities = [{'start':st, 'end': ed, 'value':value,'type':'phone_number'}]
+                    entities = [{'start':st, 'end': ed, 'value':value,'type':'phone_number','method':'regex'}]
             return entities
 
     def predict_code_cus(self,text):
-            regex = re.compile('p|P\w{5}\d{7}')
+            regex = re.compile('(p|P)\w{5}\d{7}')
             x = regex.search(text)
             entities  = [{}]
             if x != None:
                     st = x.start()
                     ed = x.end()
                     value = x.group()
-                    entities = [{'start':st, 'end': ed, 'value':value,'type':'ID'}]
+                    entities = [{'start':st, 'end': ed, 'value':value,'type':'ID','method':'regex'}]
             return entities
 
     def get_predict_test(self,text):
