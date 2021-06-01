@@ -1,5 +1,6 @@
 # ChatBot
+Shell 1:
+python run_app.py
 
-python run.py
-
-http://127.0.0.1:5000/chat
+Shell 2:
+python run_sock.py
