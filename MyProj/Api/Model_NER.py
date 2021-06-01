@@ -191,22 +191,22 @@ class Model_NER:
                         elif index != [] :
                                 # print(tmp)
                                 if trans_off[data[index[0]]] == 'B-PER':
-                                        name = tmp
+                                        name = tmp.strip()
                                         st = index[0]
                                         ed = index[-1]
                                         entities.append({'start':st,'end':ed,'value':name,'type':'NAME','method':'model'})
                                 if trans_off[data[index[0]]] == 'B-STR':
-                                        street = tmp
+                                        street = tmp.strip()
                                         st = index[0]
                                         ed = index[-1]
                                         entities.append({'start':st,'end':ed,'value':street,'type':'STREET','method':'model'})
                                 if trans_off[data[index[0]]] == 'B-DIS':
-                                        dis = tmp
+                                        dis = tmp.strip()
                                         st = index[0]
                                         ed = index[-1]
                                         entities.append({'start':st,'end':ed,'value':dis,'type':'DIS','method':'model'})
                                 if trans_off[data[index[0]]] == 'B-PRV':
-                                        province = tmp
+                                        province = tmp.strip()
                                         st = index[0]
                                         ed = index[-1]
                                         entities.append({'start':st,'end':ed,'value':province,'type':'PRV','method':'model'})

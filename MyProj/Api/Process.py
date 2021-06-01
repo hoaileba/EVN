@@ -8,7 +8,7 @@ from random import randint
 
 PATH_GRAPH = 'MyProj/DataGraph/graph_EVN_paycheck.json'
 PATH_INTENT = 'MyProj/weight_model/weight.h5'
-PATH_ENT = '/home/hoaileba/PythonFlask/NLP/MyProj/weight_model/weight_NER1.h5'
+PATH_ENT = '/home/hoaileba/PythonFlask/nlp-chatbot/MyProj/weight_model/weight_NER2-4.h5'
 PATH_TEXT = 'MyProj/DataGraph/text_action_EVN2.json'
 list_method_action = ['action_ask_address_contract','action_ask_number','action_ask_ID']
 list_method_text = ['địa chỉ', 'số điện thoại','mã khách hàng']
@@ -17,11 +17,11 @@ THRESHOLD = 0.5
 database = Database()
 
 model_intent = Model_Cls()
-model_intent.create_model()
+model_intent.create_model(path_bert='/home/hoaileba/PythonFlask/nlp-chatbot/MyProj/weight_model/pho_pretrained')
 model_intent.load_weight(PATH_INTENT)
 
 model_ner = Model_NER()
-model_ner.create_model()
+model_ner.create_model(path_bert='/home/hoaileba/PythonFlask/nlp-chatbot/MyProj/weight_model/pho_pretrained')
 model_ner.load_weight(PATH_ENT)
 
 graph = Graph()
@@ -33,23 +33,60 @@ class Process_Case:
         def __init__(self,db = database,graph = graph):
                 self.db = db
                 self.graph = graph
+                self.province22 =  ['thanh hóa', 'nghệ an', 'hà tĩnh', 'quảng bình', \
+                        'quảng trị', 'thừa thiên-huế','thừa thiên-huế','huế', 'đà nẵng', 'quảng nam', 'quảng ngãi',\
+                                 'bình định', 'phú yên', 'khánh hòa', 'ninh thuận', 'bình thuận', \
+                                         'kon tum', 'gia lai', 'đắc lắc', 'đắc nông', 'lâm đồng']
+                self.all_province = ['an giang', 'bà rịa - vũng tàu', 'vũng tàu', 'bắc giang', 'bắc kạn', 'bạc liêu', 'bắc ninh'\
+                        , 'bến tre', 'bình định', 'bình dương', 'bình phước', 'bình thuận', 'cà mau', 'cao bằng', 'đắk lắk', 'đắk nông'\
+                                , 'điện biên', 'đồng nai', 'đồng tháp', 'gia lai', 'hà giang', 'hà nam', 'hà tĩnh', 'hải dương', 'hậu giang'\
+                                        , 'hòa bình', 'hưng yên', 'khánh hòa', 'kiên giang', 'kon tum', 'lai châu', 'lâm đồng', 'lạng sơn',\
+                                                 'lào cai', 'long an', 'nam định', 'nghệ an', 'ninh bình', 'ninh thuận', 'phú thọ', 'quảng bình',\
+                                                          'quảng nam', 'quảng ngãi', 'quảng ninh', 'quảng trị', 'sóc trăng', 'sơn la', 'tây ninh',\
+                                                                   'thái bình', 'thái nguyên', 'thanh hóa', 'thừa thiên huế', 'huế', 'tiền giang',\
+                                                                            'trà vinh', 'tuyên quang', 'vĩnh long', 'vĩnh phúc', 'yên bái', 'phú yên',\
+                                                                                     'cần thơ', 'đà nẵng', 'hải phòng', 'hà nội', 'tp hcm']
+
+
                 # pass
 
-        def check_exist_province(self,string):
-                x = randint(0,3)
-                return x
+        def check_exist_province(self,entities):
+                province = {}
+                for e in entities :
+                        if e['type'] == 'PRV':
+                                province = e
+                                break
+                if province == {}:
+                        return 0
+                string = province['value']
+                string = string.strip()
+                print(string)
+                # print(self.province22[0])
+                # if string == self.province22:
+                        # print('ýey')
+                if string in self.province22:
+                        return 2
+                elif (string in self.all_province) == False:
+                        return 0
+                return 1
 
         def process_by_score(self,intent,score):
                 if score < THRESHOLD:
-                        # intent = 'fallback'
                         return 'fallback'
                 return intent
         
+        def process_by_regex(self,phone,code,intent):
+                if code != [{}]:
+                        intent = 'provide_code_customer'
+                elif phone != [{}]:
+                        intent = 'intent_number_phone'
+                return intent
+
         def check_exist_path(self,previous_action, intent,entities):
+
                 intent = self.check_province(intent,entities,previous_action)
                 print(intent)
                 if self.graph.check_intent(previous_action,intent) == False:
-                        # intent = 'fallback'
                         return 'fallback'
                 return intent
         
@@ -103,7 +140,7 @@ class Process_Case:
                 return intent
         
         def check_fallback_2nd(self,intent,previous_intent):
-                if (previous_intent =='no_entities' )and (intent =='no_entities' ) == True:
+                if (previous_intent =='no_entities' or previous_intent == 'cant_hear' or previous_intent == 'fallback' )and (intent =='no_entities' ) == True:
                         intent = intent+'_1'
                 else :  
                         intent = intent
@@ -134,7 +171,7 @@ class Process_Case:
                 if intent == 'provide_address' and (previous_action == 'action_ask_province' or previous_action == 'action_ask_province_again') :
                         is_exist = self.check_exist_province(entities)
                         print('is_exist: ', is_exist)
-                        is_exist = 2
+                        # is_exist = 2
                         if is_exist == 0 :
                                 return 'provide_address+check_no_province' 
                         else :
@@ -178,7 +215,6 @@ class Process_Case:
                                 final_intent = 'check_no'
                         else :
                                 final_intent = 'check_yes'
-                        # final_action = (self.graph.get_next_action(action,final_intent))
 
                 if action == 'action_check_name':
                         result = self.db.check_lich(entities)
@@ -189,7 +225,7 @@ class Process_Case:
 
                 # if action == 
                         # final_action = (self.graph.get_next_action(action,final_intent))
-        def processing_text(self,text,intent,action,entities):
+        def processing_text(self,text,intent,action,entities,previous_entities = None):
                 
                 if (action == 'action_ask_number' or action == 'action_ask_number_again') == True\
                         and intent == 'no_entities':
@@ -197,6 +233,8 @@ class Process_Case:
                 if (action == 'action_ask_ID' or action == 'action_ask_ID_again') == True\
                         and intent == 'no_entities':
                         text = 'Vui lòng đọc lại số mã khách hàng'
+
+                # if action == 'action_confirm_number' and (intent == 'fallback') 
 
                 if action == 'action_not_support':
                         province = ''
@@ -220,10 +258,15 @@ class Process_Case:
                         if en != [{}]:
                                 address = en['value']
                         text = text.format(address = address)
-                if action == 'action_confirm_ID' or action == 'action_confirm_ID_again' and intent == 'provide_code_customer':
+                if (action == 'action_confirm_ID' or action == 'action_confirm_ID_again') :
                         ID = ''
-                        if entities != [{}]:
-                                ID = entities[0]['value']
+                        en = [{}]
+                        for e in entities:
+                                if e['type'] == 'ID':
+                                        en = e
+                                        break
+                        if en != [{}]:
+                                ID = en['value']
                         text = text.format(code = ID)
                 if action == 'action_confirm_name' or action == 'action_confirm_name_again':
                         name = ''
@@ -235,10 +278,16 @@ class Process_Case:
                         if en != [{}]:
                                 name = en['value']
                         text = text.format(name = name)
-                if (action == 'action_confirm_number_again' or action == 'action_confirm_number') and intent == 'intent_number_phone':
+                if (action == 'action_confirm_number_again' or action == 'action_confirm_number') :
                         phone = ''
-                        if entities != [{}]:
-                                phone = entities[0]['value']
+                        en = [{}]
+                        for e in entities:
+                                if e['type'] == 'phone_number':
+                                        en = e
+                                        break
+                        # print("e: ",e)
+                        if en != [{}]:
+                                phone = en['value']
                         text = text.format(phone_number = phone)
                 if action == 'action_not_support':
                         province = ''
@@ -246,7 +295,7 @@ class Process_Case:
                                 province = entities[0]['value']
                         text = text.format(phone_number = province)
                 id = []
-                if action =='action_seach_again':
+                if action =='action_seach_again' or (action == 'action_ask_search_method' and self.graph.check_visited ):
                         for i,method in enumerate(list_method_action):
                                 if self.graph.check_visited(method) == 0:
                                         id.append(i)
@@ -328,19 +377,6 @@ class Process:
 
                 self.graph.load_check_action(gr)
                 print('raw_predict_intent: ', intent,' - score: ',score)
-                # print('raw_predict_entities: ', entities)
-                # random_en_name = [[{'start':0,'end':10,'value': 'lê bá hoài','type':'name'}],[{}]]
-                # random_en_add = [[{'start':0,'end':9,'value': 'thanh hóa','type':'province'}],[{}]]
-                # if intent == 'intent_provide_name' or intent == "provide_name":
-                #         x = randint(0,1)
-                #         # i = x%2
-                #         entities = random_en_name[0]
-                # if  intent == 'intent_provide_address' or intent == "provide_address":
-                #         xx = randint(0,1)
-                #         # print(xx%2)
-                #         # id = xx%2
-                #         entities = random_en_add[0]
-                # print('raw_predict_entities: ', entities)
                 
 # get last action 
                 previous_request = self.db.get_last_request(sender)
@@ -366,13 +402,10 @@ class Process:
                         return data
                         
                 
-                
+# ----------------------------------process by score ----------------------------------------------------
 
                 intent = self.process_case.process_by_score(intent,score)
-                if code != [{}]:
-                        intent = 'provide_code_customer'
-                elif phone != [{}]:
-                        intent = 'intent_number_phone'
+                intent = self.process_case.process_by_regex(phone,code,intent)
                 print("process_by_score: ", intent)
                 if intent == 'intent_number_phone' : 
                         entities = self.model_ner.predict_phone(text)
@@ -391,53 +424,51 @@ class Process:
                         entities = self.get_pred_entities(text)
                         print('entities: ', entities)
                 intent = self.process_case.check_exist_path(previous_action, intent,entities   )
+                
                 print('check_exist_path : ', intent)
 
                 
-# check 2nd fallback ---------------- filter 3
-                # if intent == 'provide_name' or intent == 'provide_address':
-                #         entities = self.get_pred_entities(text)
-                #         print('entities: ', entities)
+# check 2nd fallback ---------------- filter 3 ---------------------------------------------------------------
+
                 intent = self.process_case.check_entities(intent,entities,previous_action)
+                intent = self.process_case.check_exist_path(previous_action, intent,entities)
                 print('check_entities: ', intent)
 
-#check entities  ------------------- filter 4
+#check entities  ------------------- filter 4-----------------------------------------------------------------
                 
                 intent = self.process_case.check_fallback_2nd(intent,previous_intent)
+                
                 print("check_fallback_2nd: ", intent)
 
-#check reapeat branch --------------- filter 5:
+#check reapeat branch --------------- filter 5 ---------------------------------------------------------------
                 current_action = (self.graph.get_next_action(previous_action,intent))
                 print('current_action: ', current_action)
+# ------------------------------------------------------------------------------------------------------------
+
                 intent = self.process_case.check_num_in_repbranch(intent,current_action,previous_action)
                 print('check_repeat_branch: ', intent)
-                # if current_action == 'repeat_branch' and 
+
+# ------------------------------------------------------------------------------------------------------------
+
                 intent = self.process_case.check_possible_method(intent,previous_action,previous_intent)
                 print('check_possible_method: ', intent)
+# ------------------------------------------------------------------------------------------------------------
                 
+                # intent = self.process_case.check_exist_path(previous_action, intent,entities)
 # check name and address exists in database or not
                 if current_action == 'repeat_branch':
                         previous_action = current_action
-                # if final_intent == 
                 
                 current_action = (self.graph.get_next_action(previous_action,intent))
                 final_action = current_action
                 
-                if final_action == 'action_check_power':
-                        result = self.db.check_lich(entities)
-                        if result == 0:
-                                intent = 'check_no'
-                        else :
-                                intent = 'check_yes'
-                        final_action = (self.graph.get_next_action(final_action,intent))
-                if final_action == 'action_check_name':
-                        result = self.db.check_lich(entities)
-                        if result == 0:
-                                intent = 'check_no'
-                        else :
-                                intent = 'check_yes'
-                        final_action = (self.graph.get_next_action(final_action,intent))
-                
+                if (final_action == 'action_confirm_number' or final_action == 'action_confirm_name'\
+                         or final_action == 'action_confirm_address' or final_action == 'action_confirm_ID') and intent == 'fallback':
+                         
+                         entities = eval(previous_request['entities'])
+                         print('pre_entities: ', entities)
+
+
                 print('final_action: ', final_action)
                 
                 text = self.graph.get_text_action(final_action)
@@ -464,4 +495,3 @@ class Process:
                 return data
 
 
-# process = Process()

@@ -1,9 +1,11 @@
 
 import json
+import random
+from random import randint
 path_graph = '/MyProj/DataGraph/graph.json'
 
 class Graph:
-    def __init__(self,path_action = '/home/hoaileba/PythonFlask/NLP/MyProj/DataGraph/graph.txt'):
+    def __init__(self,path_action = '/home/hoaileba/PythonFlask/nlp-chatbot/MyProj/DataGraph/graph.txt'):
         self.connection = {}
         self.action_text = {}
         self.checked_action = {}
@@ -35,17 +37,30 @@ class Graph:
         return self.checked_action
 
     def get_next_action(self,start_action,intent):
-        # if start_action == 
         return self.connection[(start_action,intent)]
 
 
     def get_text_action(self,action):
+        ans  = self.action_text[action][0]
         if action == 'action_ask_search_method' and self.check_visited(action):
+            ans = self.action_text['action_ask_method'][0]
             if self.check_visited('repeat_branch') :
-                return self.action_text[action]
-            return self.action_text['action_ask_method']
+                ans = self.action_text[action][0]
+                if len(self.action_text[action]) > 1:
+                    id = randint(0,1)
+                    ans = self.action_text[action][2]
+                return ans
+            if len(self.action_text['action_ask_method']) > 1:
+                    id = randint(0,1)
+                    ans = self.action_text['action_ask_method'][id]
 
-        return self.action_text[action]
+            return self.action_text['action_ask_method'][0]
+        if len(self.action_text[action]) > 1:
+                    id = randint(0,1)
+                    ans = self.action_text[action][id]
+        # if action == 'action_ask_search_method' and self.check_visited(action) == 2:
+        #         return self.action_text[action][2]
+        return self.action_text[action][0]
 
     def add_branch(self, start_action,target_action,intent):
         # key = sno/
